@@ -56,9 +56,9 @@ function drawDots(cx, cy, radius) {
 function draw(world) {
     r.BeginDrawing();
     r.ClearBackground(r.DARKBLUE);
-    const cx = 500;
-    const cy = 100;
-    const radius = 100;
+    const cx = 700;
+    const cy = 200;
+    const radius = 200;
     r.DrawCircleLines(cx, cy, radius, r.WHITE);
     drawDots(cx, cy, radius);
     r.EndDrawing();
