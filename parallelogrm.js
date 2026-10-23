@@ -35,7 +35,7 @@ function getRandomPoints(length) {
 }
 
 function drawDot(position) {
-    r.DrawCircle(position.x, position.y, 5, r.ColorAlpha(r.WHITE, 0.5));
+    r.DrawCircle(position.x, position.y, 3, r.ColorAlpha(r.WHITE, 0.5));
 }
 
 function drawDots(p, random) {
