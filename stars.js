@@ -1,106 +1,139 @@
 const r = require("raylib");
 
 function setup() {
-    const WIDTH = 1000;
-    const HEIGHT = 800;
-    const FPS = 50;
+    const screen = {
+        WIDTH: 1000,
+        HEIGHT: 800,
+        FPS: 50,
+    };
 
     r.SetConfigFlags(r.FLAG_WINDOW_HIGHDPI);
     r.SetTraceLogLevel(r.LOG_NONE);
-    r.InitWindow(WIDTH, HEIGHT, "stars");
-    r.SetTargetFPS(FPS);
+    r.InitWindow(screen.WIDTH, screen.HEIGHT, "stars");
+    r.SetTargetFPS(screen.FPS);
 
     const origin = {
-        x: WIDTH / 2,
-        y: HEIGHT / 2,
+        x: screen.WIDTH / 2,
+        y: screen.HEIGHT / 2,
     };
 
-    // randomInRange(min, max)
-    // random
-
-    const xOfPoints = randomBetween(0, 1000, 1000);
-    const yOfPoints = randomBetween(0, 800, 1000);
+    const noOfPoints = 1000;
+    const stars = generatePoints(noOfPoints, screen);
+    console.log(stars);
 
     return {
-        WIDTH,
-        HEIGHT,
-        FPS,
+        screen,
         origin,
-        xOfPoints,
-        yOfPoints,
+        stars,
     };
 }
 
-function randomBetween(min, max, number) {
-    const random = [];
-    const delta = max - min;
-    for (let i = 0; i < number; i++) {
-        random.push(Math.random() * delta + min);
+function randomBetween(lower, upper) {
+    return Math.floor(Math.random() * (upper - lower) + lower);
+}
+
+function generatePoints(noOfPoints, screen) {
+    const points = [];
+    for (let i = 0; i < noOfPoints; i++) {
+        const x = randomBetween(0, screen.WIDTH);
+        const y = randomBetween(0, screen.HEIGHT);
+        points.push({ x, y });
     }
-    return random;
+    return points;
 }
 
-function drawStars(starX, starY) {
-    r.DrawCircle(starX, starY, 3, r.WHITE);
-}
-function distanceBetween(v1, v2) {
-    return { x: v2.x - v1.x, y: v2.y - v1.y };
-}
-function createPoints(i, arrX, arrY) {
-    return { x: arrX[i], y: arrY[i] };
+function drawStar(star) {
+    r.DrawCircleV(star, 3, r.WHITE);
 }
 
-function calDistance(world) {
-    let factor = 0.01;
-    for (let i = 0; i < world.xOfPoints.length; i++) {
-        const point = createPoints(i, world.xOfPoints, world.yOfPoints);
-        const distance = distanceBetween(world.origin, point);
+function getDirection(from, to) {
+    return { x: to.x - from.x, y: to.y - from.y };
+}
 
-        if (point.x > world.WIDTH / 2 && point.y > world.HEIGHT / 2) {
-            drawStars(world.origin, distance, -world.cf, factor, world);
-        } else drawStars(world.origin, distance, world.cf, factor, world);
+function updateStars(world) {
+    world.factor = 0.01;
+    const starPosition = world.points;
+    for (let i = 0; i < starPosition.length; i++) {
+        const direction = getDirection(world.origin, starPosition[i]);
 
-        factor += 0.01;
+        const x = world.origin.x + direction.x * world.factor;
+        const y = world.origin.y + direction.y * world.factor;
+
+        if (isOutOfBound(starPosition, i, world)) {
+            drawStarAt(
+                x,
+                y,
+                world.offset,
+                world.origin,
+
+                world,
+                starPosition[i],
+            );
+        } else {
+            drawStarAt(
+                x,
+                y,
+                -world.offset,
+                world.origin,
+
+                world,
+                starPosition[i],
+            );
+        }
+
+        world.factor += 0.01;
     }
 }
-function drawStars(origin, distance, cf, factor, world) {
-    const x = origin.x + distance.x * factor;
-    const y = origin.y + distance.y * factor;
-    let starX = x - cf;
-    let starY = y - cf;
+function isOutOfBound(starPosition, i, world) {
+    return (
+        starPosition[i].x > world.WIDTH / 2 &&
+        starPosition[i].y > world.HEIGHT / 2
+    );
+}
+
+function drawStarAt(x, y, offset, origin, world, currentStar) {
+    const starX = x + offset;
+    const starY = y + offset;
+
     if (
-        starX === world.WIDTH ||
-        starY === world.HEIGHT ||
-        starX === 0 ||
-        starY === 0
+        starX >= world.WIDTH ||
+        starY >= world.HEIGHT ||
+        starX <= 0 ||
+        starY <= 0
     ) {
-        starX = origin.x;
-        starY = origin.y;
+        world.factor = 0.01;
+        currentStar.x = origin.x;
+        currentStar.y = origin.y;
+
+        drawStar(starX, starY);
     }
-    r.DrawCircle(starX, starY, 3, r.WHITE);
+    drawStar(starX, starY);
 }
 
 function draw(world) {
     r.BeginDrawing();
     r.ClearBackground(r.BLACK);
-    r.DrawCircle(world.origin.x, world.origin.y, 4, r.WHITE);
 
-    r.DrawCircleV(world.origin, 3, r.GOLD);
-    calDistance(world);
-    //drawStars(world);
+    // r.DrawCircleV(world.origin, 3, r.GOLD);
+
+    // updateStars(world);
+    for (let i = 0; i < world.stars.length; i++) {
+        drawStar(world.stars[i]);
+    }
+
     r.EndDrawing();
 }
 
 function loop(world) {
     while (!r.WindowShouldClose()) {
-        world.cf += 1;
+        world.offset += 1;
         draw(world);
     }
 }
 
 function main() {
     const world = setup();
-    world.cf = 0.01;
+    world.offset = 0.01;
     loop(world);
 }
 main();
